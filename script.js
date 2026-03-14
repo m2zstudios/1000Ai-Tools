@@ -176,6 +176,22 @@
     applyFilters();
   }
 
+
+  function getDetailToolId() {
+    const params = new URLSearchParams(location.search);
+    const rawId = params.get("id") || params.get("tool") || "";
+    const parsed = Number(rawId);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+
+    // Support route styles like /detailed/12 or /detailed.html/12
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const last = pathParts[pathParts.length - 1] || "";
+    const pathId = Number(last);
+    if (Number.isFinite(pathId) && pathId > 0) return pathId;
+
+    return null;
+  }
+
   function updateSeoForTool(tool) {
     const title = `${tool.title} – ${tool.category} AI Tool`;
     const description = tool.description.slice(0, 155);
@@ -225,9 +241,8 @@
   }
 
   function initDetailedPage() {
-    const params = new URLSearchParams(location.search);
-    const id = Number(params.get("id"));
-    const tool = state.allTools.find((t) => t.id === id);
+    const id = getDetailToolId();
+    const tool = id ? state.allTools.find((t) => t.id === id) : null;
 
     const article = $("#toolDetails");
     const notFound = $("#notFound");
@@ -237,6 +252,17 @@
       article.classList.add("hidden");
       relatedWrap.classList.add("hidden");
       notFound.classList.remove("hidden");
+
+      if (!id) {
+        notFound.innerHTML = `
+          <h1>Select a tool to view details</h1>
+          <p>Use a URL like <code>/detailed?id=12</code> or open a tool from the browse page.</p>
+          <div class="card-actions" style="justify-content:center; margin-top: 1rem;">
+            <a href="list.html" class="btn btn-primary">Browse tools</a>
+            <a href="index.html" class="btn btn-secondary">Back home</a>
+          </div>
+        `;
+      }
       return;
     }
 
