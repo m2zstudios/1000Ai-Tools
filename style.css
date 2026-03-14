@@ -327,6 +327,39 @@ a {
   box-shadow: var(--shadow-lg);
 }
 
+
+.tool-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.tool-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 9px;
+  border: 1px solid #d8e2ff;
+  background: #fff;
+  padding: 4px;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+}
+
+.tool-logo-lg {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  padding: 8px;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
 .tool-card h3 {
   margin: 0;
   line-height: 1.35;
@@ -512,6 +545,12 @@ a:focus-visible {
 .text-link:hover,
 .breadcrumb a:hover {
   color: var(--primary);
+}
+
+@media (max-width: 420px) {
+  .detail-head {
+    align-items: flex-start;
+  }
 }
 
 @media (min-width: 760px) {

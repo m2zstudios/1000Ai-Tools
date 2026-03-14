@@ -24,6 +24,25 @@
       t = setTimeout(() => fn(...args), delay);
     };
   };
+  function getHostname(link) {
+    try {
+      return new URL(link).hostname.replace(/^www\./, "");
+    } catch {
+      return "";
+    }
+  }
+
+  function getLogoUrl(link, size = 128) {
+    const host = getHostname(link);
+    if (!host) return "";
+    return `https://logo.clearbit.com/${host}?size=${size}`;
+  }
+
+  function getLogoFallbackUrl(link, size = 128) {
+    const host = getHostname(link);
+    if (!host) return "";
+    return `https://www.google.com/s2/favicons?domain=${host}&sz=${size}`;
+  }
 
   function initGlobalUi() {
     const year = $("#year");
@@ -50,9 +69,15 @@
   }
 
   function createCard(tool) {
+    const logo = escapeHtml(getLogoUrl(tool.link, 96));
+    const fallback = escapeHtml(getLogoFallbackUrl(tool.link, 96));
+
     return `
       <article class="tool-card">
-        <span class="badge">${escapeHtml(tool.category)}</span>
+        <div class="tool-card-top">
+          <img class="tool-logo" src="${logo}" alt="${escapeHtml(tool.title)} logo" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='${fallback}';}else{this.style.display='none';}">
+          <span class="badge">${escapeHtml(tool.category)}</span>
+        </div>
         <h3>${escapeHtml(tool.title)}</h3>
         <p class="description-2">${escapeHtml(tool.description)}</p>
         <div class="card-actions">
@@ -227,9 +252,17 @@
       <span>${escapeHtml(tool.title)}</span>
     `;
 
+    const detailLogo = escapeHtml(getLogoUrl(tool.link, 128));
+    const detailFallback = escapeHtml(getLogoFallbackUrl(tool.link, 128));
+
     article.innerHTML = `
-      <h1>${escapeHtml(tool.title)}</h1>
-      <span class="badge">${escapeHtml(tool.category)}</span>
+      <div class="detail-head">
+        <img class="tool-logo tool-logo-lg" src="${detailLogo}" alt="${escapeHtml(tool.title)} logo" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='${detailFallback}';}else{this.style.display='none';}">
+        <div>
+          <h1>${escapeHtml(tool.title)}</h1>
+          <span class="badge">${escapeHtml(tool.category)}</span>
+        </div>
+      </div>
       <p>${escapeHtml(tool.description)}</p>
       <div class="card-actions">
         <a class="btn btn-primary" href="${escapeHtml(tool.link)}" target="_blank" rel="noopener noreferrer">Visit Tool</a>
