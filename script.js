@@ -1,14 +1,34 @@
 (() => {
   "use strict";
 
+  const STORAGE_KEYS = {
+    favorites: "aiTools:favorites",
+    recent: "aiTools:recentViewed"
+  };
+
   const state = {
     allTools: Array.isArray(window.tools) ? window.tools : [],
     filtered: [],
     listLimit: 24,
-    page: document.body.dataset.page
+    page: document.body.dataset.page,
+    favorites: loadNumberArray(STORAGE_KEYS.favorites),
+    recent: loadNumberArray(STORAGE_KEYS.recent)
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
+
+  function loadNumberArray(key) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(parsed) ? parsed.filter(Number.isFinite) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveNumberArray(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
 
   const escapeHtml = (value) => String(value)
     .replaceAll("&", "&amp;")
@@ -24,6 +44,7 @@
       t = setTimeout(() => fn(...args), delay);
     };
   };
+
   function getHostname(link) {
     try {
       return new URL(link).hostname.replace(/^www\./, "");
@@ -44,22 +65,39 @@
     return `https://www.google.com/s2/favicons?domain=${host}&sz=${size}`;
   }
 
-
   function routePath(page) {
-    const hasHtmlInPath = location.pathname.endsWith('.html') || location.pathname === '/' || location.pathname === '';
+    const hasHtmlInPath = location.pathname.endsWith(".html") || location.pathname === "/" || location.pathname === "";
     return hasHtmlInPath ? `${page}.html` : page;
   }
 
   function detailHref(id) {
-    return `${routePath('detailed')}?id=${id}`;
+    return `${routePath("detailed")}?id=${id}`;
   }
 
   function listHref(query = "") {
-    return `${routePath('list')}${query}`;
+    return `${routePath("list")}${query}`;
   }
 
   function homeHref() {
-    return routePath('index');
+    return routePath("index");
+  }
+
+  function isFavorite(toolId) {
+    return state.favorites.includes(toolId);
+  }
+
+  function toggleFavorite(toolId) {
+    if (isFavorite(toolId)) {
+      state.favorites = state.favorites.filter((id) => id !== toolId);
+    } else {
+      state.favorites = [toolId, ...state.favorites];
+    }
+    saveNumberArray(STORAGE_KEYS.favorites, state.favorites);
+  }
+
+  function markRecent(toolId) {
+    state.recent = [toolId, ...state.recent.filter((id) => id !== toolId)].slice(0, 8);
+    saveNumberArray(STORAGE_KEYS.recent, state.recent);
   }
 
   function initGlobalUi() {
@@ -89,12 +127,16 @@
   function createCard(tool) {
     const logo = escapeHtml(getLogoUrl(tool.link, 96));
     const fallback = escapeHtml(getLogoFallbackUrl(tool.link, 96));
+    const favoriteState = isFavorite(tool.id);
 
     return `
       <article class="tool-card">
         <div class="tool-card-top">
           <img class="tool-logo" src="${logo}" alt="${escapeHtml(tool.title)} logo" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='${fallback}';}else{this.style.display='none';}">
-          <span class="badge">${escapeHtml(tool.category)}</span>
+          <div class="tool-card-meta">
+            <span class="badge">${escapeHtml(tool.category)}</span>
+            <button class="fav-btn ${favoriteState ? "is-active" : ""}" data-fav-id="${tool.id}" aria-label="Toggle favorite for ${escapeHtml(tool.title)}" title="Toggle favorite">★</button>
+          </div>
         </div>
         <h3>${escapeHtml(tool.title)}</h3>
         <p class="description-2">${escapeHtml(tool.description)}</p>
@@ -104,6 +146,17 @@
         </div>
       </article>
     `;
+  }
+
+  function bindFavoriteButtons(root, onChange) {
+    root.querySelectorAll("[data-fav-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.getAttribute("data-fav-id"));
+        if (!id) return;
+        toggleFavorite(id);
+        onChange();
+      });
+    });
   }
 
   function getCategoryMap() {
@@ -120,8 +173,19 @@
     const categories = Object.keys(categoryMap).sort((a, b) => categoryMap[b] - categoryMap[a]);
     $("#totalCategories").textContent = categories.length;
 
-    const trending = state.allTools.slice(0, 6);
-    $("#trendingGrid").innerHTML = trending.map(createCard).join("");
+    $("#trendingGrid").innerHTML = state.allTools.slice(0, 6).map(createCard).join("");
+
+    const recentGrid = $("#recentGrid");
+    if (recentGrid) {
+      const recentTools = state.recent
+        .map((id) => state.allTools.find((t) => t.id === id))
+        .filter(Boolean)
+        .slice(0, 6);
+      recentGrid.innerHTML = recentTools.length
+        ? recentTools.map(createCard).join("")
+        : "<p class='muted'>No recent tools yet. Open a tool detail page to build your recent list.</p>";
+      bindFavoriteButtons(recentGrid, initIndexPage);
+    }
 
     const statsHtml = categories.map((category) => `
       <div class="category-pill">
@@ -129,13 +193,16 @@
         <strong>${categoryMap[category]}</strong>
       </div>
     `).join("");
-
     $("#categoryStats").innerHTML = statsHtml;
+
+    bindFavoriteButtons($("#trendingGrid"), initIndexPage);
   }
 
   function initListPage() {
     const searchInput = $("#searchInput");
     const categoryFilter = $("#categoryFilter");
+    const sortFilter = $("#sortFilter");
+    const favoritesOnly = $("#favoritesOnly");
     const toolsGrid = $("#toolsGrid");
     const emptyState = $("#emptyState");
     const resultsCount = $("#resultsCount");
@@ -144,35 +211,39 @@
     const categories = [...new Set(state.allTools.map((t) => t.category))].sort((a, b) => a.localeCompare(b));
     categoryFilter.innerHTML += categories.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
 
+    function sortTools(items, mode) {
+      const sorted = [...items];
+      if (mode === "title-desc") sorted.sort((a, b) => b.title.localeCompare(a.title));
+      else if (mode === "id-asc") sorted.sort((a, b) => a.id - b.id);
+      else if (mode === "id-desc") sorted.sort((a, b) => b.id - a.id);
+      else sorted.sort((a, b) => a.title.localeCompare(b.title));
+      return sorted;
+    }
+
     function applyFilters() {
       const term = searchInput.value.trim().toLowerCase();
       const category = categoryFilter.value;
-
-      for (const option of categoryFilter.options) {
-        option.selected = option.value === category;
-      }
+      const sortMode = sortFilter.value;
+      const favOnly = favoritesOnly.checked;
 
       state.filtered = state.allTools.filter((tool) => {
         const titleMatch = tool.title.toLowerCase().includes(term);
         const categoryMatch = category === "all" || tool.category === category;
-        return titleMatch && categoryMatch;
+        const favoriteMatch = !favOnly || isFavorite(tool.id);
+        return titleMatch && categoryMatch && favoriteMatch;
       });
 
+      state.filtered = sortTools(state.filtered, sortMode);
       state.listLimit = 24;
       renderList();
     }
 
     function renderList() {
       const visible = state.filtered.slice(0, state.listLimit);
-      const fragment = document.createDocumentFragment();
-      const wrapper = document.createElement("div");
-      wrapper.innerHTML = visible.map(createCard).join("");
-      while (wrapper.firstElementChild) fragment.appendChild(wrapper.firstElementChild);
+      toolsGrid.innerHTML = visible.map(createCard).join("");
+      bindFavoriteButtons(toolsGrid, applyFilters);
 
-      toolsGrid.innerHTML = "";
-      toolsGrid.appendChild(fragment);
-
-      resultsCount.textContent = `${state.filtered.length} tools found`;
+      resultsCount.textContent = `${state.filtered.length} tools found · ${state.favorites.length} favorites saved`;
       emptyState.classList.toggle("hidden", state.filtered.length > 0);
       loadMoreBtn.classList.toggle("hidden", state.filtered.length <= state.listLimit);
     }
@@ -180,20 +251,21 @@
     const debouncedApply = debounce(applyFilters, 200);
     searchInput.addEventListener("input", debouncedApply);
     categoryFilter.addEventListener("change", applyFilters);
+    sortFilter.addEventListener("change", applyFilters);
+    favoritesOnly.addEventListener("change", applyFilters);
+
     loadMoreBtn.addEventListener("click", () => {
       state.listLimit += 24;
       renderList();
     });
 
-    const initialCategory = new URLSearchParams(location.search).get("category");
-    if (initialCategory && categories.includes(initialCategory)) {
-      categoryFilter.value = initialCategory;
-    }
+    const params = new URLSearchParams(location.search);
+    const initialCategory = params.get("category");
+    if (initialCategory && categories.includes(initialCategory)) categoryFilter.value = initialCategory;
 
     state.filtered = [...state.allTools];
     applyFilters();
   }
-
 
   function getDetailToolId() {
     const params = new URLSearchParams(location.search);
@@ -201,7 +273,6 @@
     const parsed = Number(rawId);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
 
-    // Support route styles like /detailed/12 or /detailed.html/12
     const pathParts = location.pathname.split("/").filter(Boolean);
     const last = pathParts[pathParts.length - 1] || "";
     const pathId = Number(last);
@@ -284,6 +355,7 @@
       return;
     }
 
+    markRecent(tool.id);
     updateSeoForTool(tool);
 
     const currentIndex = state.allTools.findIndex((t) => t.id === tool.id);
@@ -298,6 +370,7 @@
 
     const detailLogo = escapeHtml(getLogoUrl(tool.link, 128));
     const detailFallback = escapeHtml(getLogoFallbackUrl(tool.link, 128));
+    const favoriteState = isFavorite(tool.id);
 
     article.innerHTML = `
       <div class="detail-head">
@@ -309,6 +382,7 @@
       </div>
       <p>${escapeHtml(tool.description)}</p>
       <div class="card-actions">
+        <button class="btn btn-secondary ${favoriteState ? "fav-inline-active" : ""}" id="favoriteDetailBtn">${favoriteState ? "★ Favorited" : "☆ Add to favorites"}</button>
         <a class="btn btn-primary" href="${escapeHtml(tool.link)}" target="_blank" rel="noopener noreferrer">Visit Tool</a>
         <a class="btn btn-secondary" href="${listHref()}">Back to list</a>
       </div>
@@ -318,8 +392,17 @@
       </div>
     `;
 
+    const favoriteDetailBtn = $("#favoriteDetailBtn");
+    if (favoriteDetailBtn) {
+      favoriteDetailBtn.addEventListener("click", () => {
+        toggleFavorite(tool.id);
+        initDetailedPage();
+      });
+    }
+
     const related = state.allTools.filter((t) => t.category === tool.category && t.id !== tool.id).slice(0, 4);
     $("#relatedTools").innerHTML = related.length ? related.map(createCard).join("") : "<p class='muted'>No related tools available.</p>";
+    bindFavoriteButtons($("#relatedTools"), initDetailedPage);
 
     const topBtn = $("#scrollTopBtn");
     window.addEventListener("scroll", () => {
