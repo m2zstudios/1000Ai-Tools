@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Category Tools | AI Tools Directory</title>
+  <meta name="description" content="Browse AI tools in a specific category." />
+  <meta property="og:title" content="Category Tools | AI Tools Directory" />
+  <meta property="og:description" content="Explore AI tools for a selected category." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/category.html" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="category">
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a href="index.html" class="logo" aria-label="AI Tools Hub Home">
+        <span class="logo-mark">✦</span>
+        <span class="logo-text">AI Tools Hub</span>
+      </a>
+
+      <nav class="main-nav" id="mainNav" aria-label="Main Navigation">
+        <a href="index.html">Home</a>
+        <a href="list.html">Browse Tools</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="list.html" class="btn btn-nav">Start Exploring</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container section">
+    <section class="section-head list-header">
+      <h1 id="categoryTitle">Category Tools</h1>
+      <p class="muted" id="categoryCount">Loading tools...</p>
+    </section>
+
+    <section class="filters" aria-label="Category tools controls">
+      <label>
+        <span class="sr-only">Search in category</span>
+        <input id="categorySearch" type="search" placeholder="Search in this category..." autocomplete="off" />
+      </label>
+      <label>
+        <span class="sr-only">Sort tools</span>
+        <select id="categorySort">
+          <option value="title-asc">Sort: Title A–Z</option>
+          <option value="title-desc">Sort: Title Z–A</option>
+          <option value="id-asc">Sort: Oldest First</option>
+          <option value="id-desc">Sort: Newest First</option>
+        </select>
+      </label>
+      <label class="favorites-only">
+        <input id="categoryFavOnly" type="checkbox" />
+        <span>Favorites only</span>
+      </label>
+    </section>
+
+    <section>
+      <div class="grid" id="categoryGrid" aria-live="polite"></div>
+      <div class="empty-state hidden" id="categoryEmpty">
+        <h2>No tools found in this category</h2>
+        <p>Try changing search terms or removing favorites-only mode.</p>
+      </div>
+      <div class="load-more-wrap"><div id="categoryLoader" class="infinite-loader hidden">Loading more tools…</div></div>
+      <div id="categorySentinel" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <p>© <span id="year"></span> AI Tools Hub</p>
+      <nav aria-label="Footer links">
+        <a href="#">About</a>
+        <a href="#">Privacy</a>
+        <a href="#">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="tools.js?v=20260314"></script>
+  <script src="script.js?v=20260314"></script>
+</body>
+</html>
