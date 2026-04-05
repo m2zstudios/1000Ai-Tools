@@ -1850,9 +1850,9 @@ const tools = [
   {
     id: 265,
     category: "Productivity",
-    title: "Taskade AI",
-    description: "Taskade is an AI-first productivity and collaboration platform that acts as a second brain for teams — combining task management, project planning, mind mapping, note-taking, and real-time collaboration in one AI-powered workspace. Its AI agents can generate project plans, summarize documents, and automate repetitive workflows. Remote and distributed teams use Taskade to stay organized, aligned, and productive across time zones.",
-    link: "https://www.taskade.com-265"
+    title: "Motion",
+    description: "Motion is an AI productivity platform that automatically plans your calendar, prioritizes tasks, and builds intelligent schedules based on deadlines, workload, and team availability. It helps individuals and teams reduce context switching and focus on high-impact work by continuously optimizing what to do next.",
+    link: "https://www.usemotion.com"
   },
   {
     id: 266,
