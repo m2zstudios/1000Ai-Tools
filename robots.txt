@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cachenest.netlify.app/sitemap.xml
