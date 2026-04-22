@@ -1,5 +1,5 @@
 {
-  "updatedAt": "Apr 22, 2026",
+  "updatedAt": "Apr 17, 2026",
   "ranks": [
     { "id": 1, "rank": 1, "overall": 96, "reasoning": 98, "coding": 95, "vision": 88, "context": 200, "change": 0, "tags": ["api", "vision"], "categories": ["reasoning", "coding", "vision"] },
     { "id": 2, "rank": 2, "overall": 94, "reasoning": 96, "coding": 94, "vision": 85, "context": 200, "change": 1, "tags": ["api", "vision", "free"], "categories": ["reasoning", "coding", "vision", "free"] },
