@@ -25,8 +25,36 @@
 <footer class="site-footer"><div class="container footer-wrap"><p>© <span id="year"></span> m2zpicks — Creator picks updated regularly</p><nav><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></nav></div></footer>
 <script src="https://cdn.jsdelivr.net/npm/appwrite@16/dist/iife/sdk.js"></script><script src="appwrite.js"></script><script src="gift.js?v=20260314"></script>
 <script>
-(async()=>{const creators=await window.AppwriteLayer.fetchAllCreators();const tools=await window.AppwriteLayer.fetchAllTools();const byId=new Map(tools.map(t=>[Number(t.id),t]));const root=document.getElementById('creatorBlocks');document.getElementById('year').textContent=new Date().getFullYear();document.getElementById('creatorsCount').textContent=creators.length;document.getElementById('picksCount').textContent=creators.reduce((a,c)=>a+(c.pick_ids||[]).length,0);const reach=creators.reduce((a,c)=>a+(parseInt(c.reach_k||0,10)),0);document.getElementById('reachCount').textContent=reach?`${(reach/1000).toFixed(1)}M+`:'—';
-function render(platform='all'){const list=creators.filter(c=>platform==='all'||c.platform===platform);root.innerHTML=list.map((c,i)=>{const picks=(c.pick_ids||[]).map(id=>byId.get(Number(id))).filter(Boolean);const top=picks[0];const rest=picks.slice(1,4);return `<article class="creator-block ${i%2?'flip':''}"><div><div class="creator-top-section"><div class="name-badge-row"><div><div class="creator-fullname">${c.name} <span class="vtick">✓</span></div><div class="niche-row">${(c.niche_tags||[]).map(t=>`<span class='niche-tag'>${t}</span>`).join('')}</div></div><div>${c.reach_label||''}</div></div></div>${top?`<div class='rec-tool-box'><div>${top.title}</div></div>`:''}<div class='quotes-area'><div class='quote-block'>${c.tool_quote||''}</div><div class='quote-block'>${c.platform_quote||''}</div></div><div class='picks-head'><span>${c.name.split(' ')[0]}'s Other Picks</span><span>${Math.max((c.pick_ids||[]).length-1,0)} more</span></div><div class='pick-rows'>${rest.map((t,ix)=>`<a class='pick-row' href='detailed.html?id=${t.id}'><span>#${ix+2}</span><span>${t.title}</span></a>`).join('')}</div><div class='card-foot'><a class='social-btn' href='${c.channel_url||'#'}' target='_blank'>${c.platform||'Channel'}</a></div></div><div class="creator-img-col"><img src="${c.avatar_url||'fallback.png'}" alt="${c.name}"></div></article>`;}).join('')||'<p>No creators yet.</p>';}
-render();document.querySelectorAll('.ptab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('active'));t.classList.add('active');render(t.dataset.platform);}));window.addEventListener('scroll',()=>{const pct=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;document.getElementById('scrollProgress').style.width=Math.min(pct,100)+'%';});})();
+(async()=>{
+  const creatorsRaw=await window.AppwriteLayer.fetchAllCreators();
+  const tools=await window.AppwriteLayer.fetchAllTools();
+  const byId=new Map(tools.map(t=>[Number(t.id),t]));
+  const creators=creatorsRaw.map(c=>({
+    ...c,
+    platform:c.platform||c.platforn||'Unknown',
+    pick_ids:Array.isArray(c.pick_ids)?c.pick_ids:(Array.isArray(c.picks_ids)?c.picks_ids:[])
+  }));
+  const root=document.getElementById('creatorBlocks');
+  document.getElementById('year').textContent=new Date().getFullYear();
+  document.getElementById('creatorsCount').textContent=creators.length;
+  document.getElementById('picksCount').textContent=creators.reduce((a,c)=>a+(c.pick_ids||[]).length,0);
+  const reach=creators.reduce((a,c)=>a+(parseInt(c.reach_k||0,10)),0);
+  document.getElementById('reachCount').textContent=reach?`${(reach/1000).toFixed(1)}M+`:'—';
+
+  function render(platform='all'){
+    const list=creators.filter(c=>platform==='all'||c.platform===platform);
+    root.innerHTML=list.map((c,i)=>{
+      const picks=(c.pick_ids||[]).map(id=>byId.get(Number(id))).filter(Boolean);
+      const top=picks[0];
+      const rest=picks.slice(1,4);
+      return `<article class="creator-block ${i%2?'flip':''}"><div><div class="creator-top-section"><div class="name-badge-row"><div><div class="creator-fullname">${c.name} <span class="vtick">✓</span></div><div class="niche-row">${(c.niche_tags||[]).map(t=>`<span class='niche-tag'>${t}</span>`).join('')}</div></div><div>${c.reach_label||''}</div></div></div>${top?`<div class='rec-tool-box'><div>${top.title}</div></div>`:''}<div class='quotes-area'><div class='quote-block'>${c.tool_quote||''}</div><div class='quote-block'>${c.platform_quote||''}</div></div><div class='picks-head'><span>${(c.name||'Creator').split(' ')[0]}'s Other Picks</span><span>${Math.max((c.pick_ids||[]).length-1,0)} more</span></div><div class='pick-rows'>${rest.map((t,ix)=>`<a class='pick-row' href='detailed.html?id=${t.id}'><span>#${ix+2}</span><span>${t.title}</span></a>`).join('')}</div><div class='card-foot'><a class='social-btn' href='${c.channel_url||'#'}' target='_blank'>${c.platform||'Channel'}</a></div></div><div class="creator-img-col"><img src="${c.avatar_url||'fallback.png'}" alt="${c.name}"></div></article>`;
+    }).join('')||'<p>No creators yet.</p>';
+  }
+
+  render();
+  document.querySelectorAll('.ptab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('active'));t.classList.add('active');render(t.dataset.platform);}));
+  window.addEventListener('scroll',()=>{const pct=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;document.getElementById('scrollProgress').style.width=Math.min(pct,100)+'%';});
+})();
 </script>
+
 </body></html>
