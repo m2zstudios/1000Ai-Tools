@@ -119,6 +119,9 @@
     }
   }
 
+  
+
+
   function initTheme() {
     applyTheme(state.theme);
     const themeToggle = $("#themeToggle");
@@ -339,7 +342,7 @@
       canonical.setAttribute("rel", "canonical");
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute("href", `https://cachenest.netlify.app/category.html?name=${encodeURIComponent(categoryName)}`);
+    canonical.setAttribute("href", `https://m2zpicks.netlify.app/category.html?name=${encodeURIComponent(categoryName)}`);
 
     function sortTools(items, mode) {
       const sorted = [...items];
@@ -448,7 +451,7 @@
       canonical.setAttribute("rel", "canonical");
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute("href", `https://cachenest.netlify.app/detailed.html?id=${tool.id}`);
+    canonical.setAttribute("href", `https://m2zpicks.netlify.app/detailed.html?id=${tool.id}`);
 
     const jsonLd = {
       "@context": "https://schema.org",
