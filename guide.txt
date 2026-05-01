@@ -1,0 +1,84 @@
+M2ZPICKS APPWRITE MIGRATION GUIDE
+
+WHAT YOU NEED TO DO IN APPWRITE (MANUAL SETUP)
+1) Ensure Project and DB
+- Project ID: m2zpicks
+- Database ID: m2zpicks-db
+
+2) Create collections/tables
+A) tools
+- id (integer, required)
+- category (string, required)
+- title (string, required)
+- description (string, required)
+- link (string, required)
+- verified (string/boolean optional)
+
+B) ranks
+- id (integer, required)
+- rank (integer, required)
+- overall (integer, required)
+- reasoning (integer, required)
+- coding (integer, required)
+- vision (integer, required)
+- context (string, required)   # e.g. "200"
+- change (string, required)    # e.g. "1" or "-2"
+- tags (string[] array)
+- categories (string[] array)
+
+C) creators (NEW)
+Required columns and types:
+- slug (string, required, unique suggested)
+- name (string, required)
+- handle (string, required)
+- platform (string, required; e.g. YouTube/Twitter/X/TikTok)
+- avatar_url (string, required)
+- channel_url (string, required)
+- bio (string, optional)
+- featured (boolean, required, default false)
+- pick_ids (integer[] array, required)
+
+Example creators document:
+{
+  "slug": "mkbhd",
+  "name": "MKBHD",
+  "handle": "@MKBHD",
+  "platform": "YouTube",
+  "avatar_url": "https://yt3.googleusercontent.com/....jpg",
+  "channel_url": "https://youtube.com/@mkbhd",
+  "bio": "Tech reviewer covering AI tools weekly",
+  "featured": true,
+  "pick_ids": [49, 12, 87, 203]
+}
+
+3) Permissions
+- For this phase, keep read permissions public for tools/ranks/creators.
+
+WHAT I FIXED NOW
+1) Fixed duplicate "Creator Picks" nav button on homepage nav.
+2) Fixed script load ordering on rankings page so Appwrite is loaded before code that depends on it.
+3) Rebuilt script.js logic so detailed page restored missing features:
+- Visit Tool button
+- Favorite toggle button
+- Previous/Next buttons
+- Related tools
+- Breadcrumb
+- Rankings score card
+- Creator endorsement chips
+4) Added better startup guard and error clarity if AppwriteLayer is missing.
+5) Kept list/index Appwrite loading and creator badge behavior.
+
+WHY YOU SAW THIS CONSOLE ERROR
+Uncaught TypeError: Cannot read properties of undefined (reading 'fetchAllTools')
+- Root cause: script.js ran before appwrite.js initialized window.AppwriteLayer on at least one page.
+- Result: code attempted window.AppwriteLayer.fetchAllTools() while AppwriteLayer was undefined.
+- Even if page looked fine, browser can recover partially if other scripts run later; console still logs the error.
+- Fix applied: script include order corrected + runtime guard in script.js.
+
+POST-DEPLOY CHECKLIST
+- Hard refresh browser (Ctrl+F5)
+- Verify no console errors on index/list/detailed/rankings/creators
+- Confirm rankings filter tabs click and change rows
+- Confirm detailed page buttons work (favorite, visit, prev/next)
+- Confirm creators badges appear on cards and rankings rows
+
