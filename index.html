@@ -37,7 +37,9 @@
       <nav class="main-nav" id="mainNav" aria-label="Main Navigation">
         <a href="index.html" class="active">Home</a>
         <a href="list.html">Browse Tools</a>
+        <a href="creators.html">Creator Picks</a>
         <a href="rankings.html">AI Rankings</a>
+        <a href="creators.html">Creator Picks</a>
       </nav>
 
       <div class="nav-actions">
@@ -78,7 +80,13 @@
       </div>
       <div class="grid" id="trendingGrid" aria-live="polite"></div>
     </section>
-
+    <section class="container section" id="creatorPreview">
+      <div class="section-head">
+        <h2>🎬 Creator Picks</h2>
+        <a href="creators.html" class="text-link">All creators →</a>
+      </div>
+      <div class="creator-preview-strip" id="creatorPreviewStrip"></div>
+    </section>
 
     <section class="container section" id="recentWrap">
       <div class="section-head">
@@ -121,8 +129,9 @@
     </div>
   </footer>
 
-  <script src="tools.js?v=202600014"></script>
-  <script src="script.js?v=20260314"></script>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@16/dist/iife/sdk.js"></script>
+  <script src="appwrite.js"></script>
+  <script src="script.js?v=20260501"></script>
   <script src="gift.js?v=20260314"></script>
 
 </body>
