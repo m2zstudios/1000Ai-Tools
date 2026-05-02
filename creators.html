@@ -28,8 +28,11 @@
 <script>
 (async()=>{
   const creatorsRaw=await window.AppwriteLayer.fetchAllCreators();
-  const tools=await window.AppwriteLayer.fetchAllTools();
+  const creatorDocs=await window.AppwriteLayer.fetchAllCreators();
+  const allPickIds=[...new Set(creatorDocs.flatMap(c=>((c.pick_ids||c.picks_ids)||[]).map(Number)).filter(Boolean))];
+  const tools=await window.AppwriteLayer.fetchToolsByIds(allPickIds);
   const byId=new Map(tools.map(t=>[Number(t.id),t]));
+  const creatorsRaw=creatorDocs;
   const creators=creatorsRaw.map(c=>({
     ...c,
     platform:c.platform||c.platforn||'Unknown',

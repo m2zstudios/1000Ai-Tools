@@ -61,6 +61,19 @@
     return tools.filter(t => t.category === category);
   }
 
+  async function fetchToolsByIds(ids) {
+    const uniq = [...new Set((ids || []).map((id) => Number(id)).filter(Boolean))];
+    if (!uniq.length) return [];
+    const chunks = [];
+    for (let i = 0; i < uniq.length; i += 100) chunks.push(uniq.slice(i, i + 100));
+    const out = [];
+    for (const chunk of chunks) {
+      const res = await db.listDocuments(DATABASE_ID, COLLECTIONS.tools, [Query.equal('id', chunk), Query.limit(100)]);
+      out.push(...res.documents);
+    }
+    return out;
+  }
+
   async function getCreatorPickLookup() {
     const creators = await fetchAllCreators();
     const map = new Map();
@@ -72,5 +85,5 @@
     return map;
   }
 
-  window.AppwriteLayer = { fetchAllTools, fetchAllRanks, fetchRankedTools, fetchToolById, fetchToolsByCategory, fetchAllCreators, getCreatorPickLookup };
+  window.AppwriteLayer = { fetchAllTools, fetchAllRanks, fetchRankedTools, fetchToolById, fetchToolsByCategory, fetchToolsByIds, fetchAllCreators, getCreatorPickLookup };
 })();
