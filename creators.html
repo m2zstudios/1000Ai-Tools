@@ -28,9 +28,10 @@
 <script>
 (async()=>{
 try{
-  const creatorDocs=await window.AppwriteLayer.fetchAllCreators();
+  const withTimeout = (promise, ms = 12000) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('Creators request timeout')), ms))]);
+  const creatorDocs=await withTimeout(window.AppwriteLayer.fetchAllCreators(), 12000);
   const allPickIds=[...new Set(creatorDocs.flatMap(c=>((c.pick_ids||c.picks_ids)||[]).map(Number)).filter(Boolean))];
-  const tools=await window.AppwriteLayer.fetchToolsByIds(allPickIds);
+  const tools=allPickIds.length ? await withTimeout(window.AppwriteLayer.fetchToolsByIds(allPickIds), 12000) : [];
   const byId=new Map(tools.map(t=>[Number(t.id),t]));
   const creators=creatorDocs.map(c=>({
     ...c,
