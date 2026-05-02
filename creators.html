@@ -27,13 +27,12 @@
 <script src="https://cdn.jsdelivr.net/npm/appwrite@16/dist/iife/sdk.js"></script><script src="appwrite.js"></script><script src="gift.js?v=20260314"></script>
 <script>
 (async()=>{
-  const creatorsRaw=await window.AppwriteLayer.fetchAllCreators();
+try{
   const creatorDocs=await window.AppwriteLayer.fetchAllCreators();
   const allPickIds=[...new Set(creatorDocs.flatMap(c=>((c.pick_ids||c.picks_ids)||[]).map(Number)).filter(Boolean))];
   const tools=await window.AppwriteLayer.fetchToolsByIds(allPickIds);
   const byId=new Map(tools.map(t=>[Number(t.id),t]));
-  const creatorsRaw=creatorDocs;
-  const creators=creatorsRaw.map(c=>({
+  const creators=creatorDocs.map(c=>({
     ...c,
     platform:c.platform||c.platforn||'Unknown',
     pick_ids:Array.isArray(c.pick_ids)?c.pick_ids:(Array.isArray(c.picks_ids)?c.picks_ids:[])
@@ -60,6 +59,7 @@
   if(loading) loading.style.display="none";
   document.querySelectorAll('.ptab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('active'));t.classList.add('active');render(t.dataset.platform);}));
   window.addEventListener('scroll',()=>{const pct=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;document.getElementById('scrollProgress').style.width=Math.min(pct,100)+'%';});
+}catch(err){console.error(err);const loading=document.getElementById('creatorLoading');if(loading) loading.style.display='none';const root=document.getElementById('creatorBlocks');if(root) root.innerHTML='<div class="empty-state"><h2>Unable to load creators</h2><p>Please refresh and try again.</p></div>';}
 })();
 </script>
 
