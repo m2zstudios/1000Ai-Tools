@@ -226,6 +226,8 @@
   }
 
   async function init() {
+    const body = document.getElementById('rankBody');
+    if (body) body.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
     try {
       await loadData();
       buildCategoryFilter();
