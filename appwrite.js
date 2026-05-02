@@ -61,6 +61,40 @@
     return tools.filter(t => t.category === category);
   }
 
+
+  async function fetchToolsPage(limit = 48, cursorAfter = null) {
+    const queries = [Query.limit(limit), Query.orderDesc('$createdAt')];
+    if (cursorAfter) queries.push(Query.cursorAfter(cursorAfter));
+    const res = await db.listDocuments(DATABASE_ID, COLLECTIONS.tools, queries);
+    return {
+      documents: res.documents,
+      total: res.total,
+      nextCursor: res.documents.length ? res.documents[res.documents.length - 1].$id : null
+    };
+  }
+
+  async function fetchFeaturedTools(limit = 24) {
+    const res = await fetchToolsPage(limit, null);
+    return res.documents;
+  }
+
+  async function fetchHomepageStats() {
+    const key = 'mz_home_stats_cache';
+    const cached = readCache(key);
+    if (cached) return cached;
+    const first = await fetchToolsPage(1, null);
+    const sample = await fetchToolsPage(200, null);
+    const catMap = {};
+    sample.documents.forEach((t) => { catMap[t.category] = (catMap[t.category] || 0) + 1; });
+    const stats = {
+      totalTools: first.total,
+      totalCategories: Object.keys(catMap).length,
+      topCategories: Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([category,count])=>({category,count}))
+    };
+    writeCache(key, stats);
+    return stats;
+  }
+
   async function fetchToolsByIds(ids) {
     const uniq = [...new Set((ids || []).map((id) => Number(id)).filter(Boolean))];
     if (!uniq.length) return [];
@@ -85,5 +119,5 @@
     return map;
   }
 
-  window.AppwriteLayer = { fetchAllTools, fetchAllRanks, fetchRankedTools, fetchToolById, fetchToolsByCategory, fetchToolsByIds, fetchAllCreators, getCreatorPickLookup };
+  window.AppwriteLayer = { fetchAllTools, fetchAllRanks, fetchRankedTools, fetchToolById, fetchToolsByCategory, fetchToolsByIds, fetchToolsPage, fetchFeaturedTools, fetchHomepageStats, fetchAllCreators, getCreatorPickLookup };
 })();
