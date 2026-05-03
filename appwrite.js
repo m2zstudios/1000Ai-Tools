@@ -82,14 +82,13 @@
     const key = 'mz_home_stats_cache';
     const cached = readCache(key);
     if (cached) return cached;
-    const first = await fetchToolsPage(1, null);
-    const sample = await fetchToolsPage(200, null);
+    const tools = await fetchAllTools();
     const catMap = {};
-    sample.documents.forEach((t) => { catMap[t.category] = (catMap[t.category] || 0) + 1; });
+    tools.forEach((t) => { catMap[t.category] = (catMap[t.category] || 0) + 1; });
     const stats = {
-      totalTools: first.total,
+      totalTools: tools.length,
       totalCategories: Object.keys(catMap).length,
-      topCategories: Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([category,count])=>({category,count}))
+      topCategories: Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([category,count])=>({category,count}))
     };
     writeCache(key, stats);
     return stats;
