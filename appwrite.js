@@ -52,13 +52,13 @@
   }
 
   async function fetchToolById(numericId) {
-    const tools = await fetchAllTools();
-    return tools.find(t => Number(t.id) === Number(numericId)) || null;
+    const res = await db.listDocuments(DATABASE_ID, COLLECTIONS.tools, [Query.equal('id', [Number(numericId)]), Query.limit(1)]);
+    return res.documents[0] || null;
   }
 
-  async function fetchToolsByCategory(category) {
-    const tools = await fetchAllTools();
-    return tools.filter(t => t.category === category);
+  async function fetchToolsByCategory(category, limit = 24) {
+    const res = await db.listDocuments(DATABASE_ID, COLLECTIONS.tools, [Query.equal('category', [category]), Query.orderDesc('$createdAt'), Query.limit(limit)]);
+    return res.documents;
   }
 
 
