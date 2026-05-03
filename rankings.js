@@ -81,7 +81,7 @@
             <div class="model-text">
               <div class="model-name">${m.title}</div>
               <div class="model-maker">${m.category}</div>
-              <div class="model-tags">${tagHtml(m.tags)}</div>
+              <div class="model-tags">${tagHtml(m.tags)}</div>${m.creatorPicks?.length ? `<div class="creator-pick-badge">⭐ Picked by <strong>${m.creatorPicks[0].name}</strong>${m.creatorPicks.length > 1 ? ` +${m.creatorPicks.length - 1} more` : ''}</div>` : ''}
             </div>
           </div>
           <div class="overall-cell">
@@ -179,36 +179,16 @@
   }
 
   async function loadData() {
-    const toolList = Array.isArray(window.tools) ? window.tools : [];
-    if (!toolList.length) {
-      throw new Error('tools.js not loaded');
-    }
-
-    const response = await fetch('./ranks.json', { cache: 'no-store' });
-    if (!response.ok) {
-      throw new Error(`Unable to load ranks.json (${response.status})`);
-    }
-
-    const rankPayload = await response.json();
-    const rankRows = Array.isArray(rankPayload.ranks) ? rankPayload.ranks : [];
-    const rankById = new Map(rankRows.map((item) => [item.id, item]));
-
-    state.data = toolList
-      .filter((tool) => rankById.has(tool.id))
-      .map((tool) => {
-        const rank = rankById.get(tool.id);
-        const tags = Array.isArray(rank.tags) ? rank.tags : [];
-        const categories = Array.isArray(rank.categories) ? rank.categories : tags.map((tag) => (tag === 'open' ? 'open-source' : tag));
-        return {
-          ...tool,
-          ...rank,
-          tags,
-          categories
-        };
-      });
-
-    state.data.sort((a, b) => a.rank - b.rank);
-    setUpdateBadge(rankPayload.updatedAt);
+    const merged = await window.AppwriteLayer.fetchRankedTools();
+    const creators = await window.AppwriteLayer.getCreatorPickLookup();
+    state.data = merged.map((item) => ({
+      ...item,
+      context: parseInt(item.context, 10) || 0,
+      change: parseInt(item.change, 10) || 0,
+      creatorPicks: creators.get(Number(item.id)) || []
+    }));
+    const latest = state.data.reduce((m, it) => Math.max(m, new Date(it.$updatedAt).getTime()), 0);
+    setUpdateBadge(latest ? new Date(latest).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '');
   }
 
   function bindEvents() {
@@ -246,6 +226,8 @@
   }
 
   async function init() {
+    const body = document.getElementById('rankBody');
+    if (body) body.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
     try {
       await loadData();
       buildCategoryFilter();
@@ -257,7 +239,7 @@
       console.error(err);
       const body = document.getElementById('rankBody');
       if (body) {
-        body.innerHTML = '<div class="empty-state"><h2>Rankings unavailable</h2><p>Could not load ranks.json. Please try again.</p></div>';
+        body.innerHTML = '<div class="empty-state"><h2>Rankings unavailable</h2><p>Could not load rankings data. Please try again.</p></div>';
       }
       setUpdateBadge();
     }
