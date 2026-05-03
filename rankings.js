@@ -81,7 +81,7 @@
             <div class="model-text">
               <div class="model-name">${m.title}</div>
               <div class="model-maker">${m.category}</div>
-              <div class="model-tags">${tagHtml(m.tags)}${m.creatorPicks?.length ? `<div class="creator-pick-badge">⭐ Picked by <strong>${m.creatorPicks[0].name}</strong>${m.creatorPicks.length > 1 ? ` +${m.creatorPicks.length - 1} more` : ''}</div>` : ''}</div>
+              <div class="model-tags">${tagHtml(m.tags)}</div>${m.creatorPicks?.length ? `<div class="creator-pick-badge">⭐ Picked by <strong>${m.creatorPicks[0].name}</strong>${m.creatorPicks.length > 1 ? ` +${m.creatorPicks.length - 1} more` : ''}</div>` : ''}
             </div>
           </div>
           <div class="overall-cell">
